@@ -4,7 +4,6 @@
     - [I-Nodes](#i-nodes)
     - [D-Blocks](#d-blocks)
     - [I-Node and D-Block: The Big Picture](#i-nodes-and-d-blocks-the-big-picture)
-    - 
 
 ## I-Nodes
 
@@ -726,8 +725,9 @@ char *get_path_string(terminal_context_t *context);
 ```C
 int tree(terminal_context_t *context, char *path);
 ```
-- !!!REWORD THIS!!!
-- Displays a tree representation of the inode. If the inode is a filename, display the name of the file. If the inode is a directory, display all files and directories including any in any subdirectories.
+- Displays a tree representation of the inode. 
+- Unlike list which displays only the contents of the current inode, tree displays the contents of the entire subtree begining at the current inode.
+  - If the inode is a file, display the name of the file. If the inode is a directory, display all files and directories including any in subdirectories.
 - All files within a directory should be displayed in the order of their occurrence in the directory entries in the directory.
 - For each depth level from the root of the tree, there is THREE spaces that appears before the file name.
 ```txt
