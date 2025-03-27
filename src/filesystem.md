@@ -1,9 +1,27 @@
+## Revision Log
+
 ## Table of Contents
 
 1. Background and Design Details
     - [I-Nodes](#i-nodes)
     - [D-Blocks](#d-blocks)
     - [I-Node and D-Block: The Big Picture](#i-nodes-and-d-blocks-the-big-picture)
+    - [File and Directory Representation](#file-and-directory-representation)
+    - [File System Overview](#file-system-overview)
+2. Assignment Preliminary
+    - [Assignment Overview](#assignment-overview)
+    - [Debugging](#debugging)
+    - [Utility Functions](#utility-functions)
+    - [Terminal Program](#terminal-program)
+3. Project Part 0 and Part 1
+    - [Part 0 and Part 1 Structs](#part-01-structs)
+    - [Part 0 Functions](#part-0-functions)
+    - [Part 1 Functions](#part-1-functions)
+4. Project Part 2 and Part 3
+    - [Part 2 and Part 3 Structs and Macros](#part-23-structs-and-macros)
+    - [Part 2 and Part 3 Core Concepts](#parts-23-core-concepts)
+    - [Part 2 Functions](#part-2-functions)
+    - [Part 3 Functions](#part-3-functions)
 
 ## I-Nodes
 
@@ -31,7 +49,7 @@ the null terminating character. We already know the maximum size
 of the string.
 
 > [!INFORMATION]
-> The above format is how all file names are stored throughout this project. 
+> The above format is how all file names are stored throughout this project. The max size of the file name will be 14 characters. Names that are less than 14 characters are null terminated. Names exactly 14 characters long are not null terminated. Names larger than 14 characters are truncated to be 14 characters.
 
 ## D-Blocks
 
@@ -190,7 +208,7 @@ Indirect Index D-block 52
 | 60-63 | Index | X |
 
 > [!NOTE]
-> In this assignment, when we are writing data d-blocks to a index d-blocks in this assignment, do not modify the bytes marked X above. They should retain their previous value. Only modify 
+> In this assignment, when we are writing to a indices of an index d-block in this assignment, do not modify any byte that you are not required to. They should retain their previous value. In the above example, the bytes with indices marked X should not be modified to some new index. 
 
 ## File and Directory Representation
 
@@ -254,6 +272,13 @@ directory are:
     - The root directory has a directory entry named `.` that refers to the current directory.
     - As a result, the root inode also allocates the first D-block to store the directory entry. 
 - The root directory is the entry point into the file system. From the root directory, we can traverse through all the files and directories from the root.
+- We can create new directories and files within a directory.
+    - Adding a directory or file in a directory will add a directory entry to the parent directory. This allows the the parent directory to find all of its child items (subdirectories and files). 
+    - Each new directory will have a parent directory.
+    - The directory will have a directory entry named `.` that points to its own directory inode and a directory entry named `..` that points to the parent directory's inode.
+    - This allows traversal from a subdirectory to a parent directory. 
+- We can write content to files in the file system which will take up D-blocks.
+- Adding files and directories to the file system will use one inode and will require allocation of D-blocks.
 
 ## Assignment Overview
 
@@ -270,11 +295,154 @@ has their own test cases.
 **Part 1**: This part of the assignment is required. This part involves manipulation of the data stored in the D-blocks of an inode. The functions defined here serve as a layer of abstraction, and after these functions are correctly implemented, later parts do not need to be concerned with how D-blocks work (we can simply call one of these functions here). This should be the first part of the assignment (outside of part 0) which should be completed before moving on. However, this part is (likely) the most tricky part of the assignment. It is recommended to understand D-blocks fully before attempting to implement these functions.
 
 **Part 2**: This part of the assignment is required. This part involves implementing high level file IO operations that include opening, writing, reading, and closing a file. Part 2 does not need to be completed immediately after part 1, but it is recommended because if part 1 is correctly implemented, this is likely the easiest part of the whole project. However, you can complete part 3 before part 2. 
+- The functions in this part can be implemented in any order. They only depend on functions written in part 0 and part 1 of the assignment.
+- Test cases will test the functions individually, so if you get stuck on implementing one function, you can attempt another!
 
 **Part 3**: This part of the assignment is required. This part involves implementing high level file system operations such as creating files and directories and more. This part requires the functions implemented in part 1 and part 2, and it can be immediately completed after those two parts. 
+- The functions in this part can be implemented in any order. They only depend on functions written in part 0 and part 1 of the assignment.
+- Test cases will test the functions individually, so if you get stuck on implementing one function, you can attempt another!
 
 > [!WARNING]
 > For this assignment, do not modify bytes of the file system unnecessarily as this will cause you to fail test cases. For example, if a function requires setting the directory entry name to ".", then no other bytes after the null terminating character in the entry name should be modified.
+
+## Debugging
+
+As stated previously, **DO NOT** call any function that outputs to standard output unless stated otherwise. To aid in debugging, there are
+macros defined in `debug.h` which can be used to replace `printf`.
+
+```C
+info(level, fmt_str, ...)
+```
+- The info macro dumps output to standard error. It behaves like `printf` with the `fmt_str` and formatting arguments. It will also print useful diagnostic information such as the function, line, and the file where `info` was invoked.
+- Unlike `printf`, the new line is automatically appended to `fmt_string`.
+- There is an additional argument, `level`, which is the level assigned to the `info` statement. There is a `INFO_LEVEL` macro which filters info
+invocations via their levels.
+    - Only `info` calls with levels less than or equal to `INFO_LEVEL` will output to standard error.
+    - There are only four info levels supported (but this can be extended). They are `0`, `1`, `2`, and `3`
+    - You are allowed to modify `INFO_LEVEL` in `debug.h` to filter your `info` calls.
+- `info` will not print anything if the `DEBUG` macro is not predefined. Your main file will be built with `DEBUG` defined, but the test cases will not. 
+
+Example Usage:
+```C
+#define INFO_LEVEL 2
+
+int main()
+{
+    info(0, "This will be outputted to STDERR = %d", 3); // this info print to stderr since 0 < 2 = INFO_LEVEL
+    info(3, "This will not be outputted to STDERR = %d", 2); // this info will not print to stderr since 3 > 2 = INFO_LEVEL
+    return 0;
+}
+```
+
+A lot of functions in this project will return `fs_retcode_t` which may be a `SUCCESS` or a return code signifying an error. However, there are times where you can expect that one of these function call should never return anything other than `SUCCESS` (typically because you validate the function call previously). Therefore, it would be useful to get a diagnostic message whenever these function return something other than `SUCCESS`. The following macros will do so:
+
+```C
+fs_expect_success(expr)
+fs_expect_success(expr, fmt_str, ...)
+```
+- If `expr` does not return a `SUCCESS`, then a diagnostic message is outputted to standard error. The program continues to run afterwards.
+- If a `fmt_str` and arguments for the `fmt_str` is not provided, then `fs_expect_success` will print a default diagnostic message.
+- If a `fmt_str` and arguments for the `fmt_str` is provided, then the formatted `fmt_str` will be outputted to stderr. 
+- These macros will output to standard error if the `DEBUG` macro is set.
+
+```C
+fs_assert_success(expr)
+fs_assert_success(expr, fmt_str, ...)
+```
+- This macro behaves exactly the same as `fs_expect_success` except that instead of continuing the program after `expr` does not return `SUCCESS`, a diagnostic message is issued and the program is aborted. 
+
+Example usage:
+```C
+int main()
+{
+    filesystem_t fs;
+    fs_expect_success(new_filesystem(&fs, 0, 0), "ERROR HERE!!!"); // (1)
+    fs_expect_success(SUCCESS, "I will not be %s", "printed"); // (2)
+    fs_assert_success(INVALID_INPUT); // (3)
+    fs_expect_success(INVALID_INPUT, "I will not be called"); // (4)
+
+    // The expr in (1) will return INVALID_INPUT causing "ERROR HERE!!!" to be outputted to stderr along with diagnostic information.
+    // the program continues after (1)
+
+    // The expr in (2) is SUCCESS, the program does not output anything and continues
+
+    // the expr in (3) is INVALID_INPUT. The program outputs the default message.
+    // the program aborts here because the assertion failed
+
+    // the expr in (4) is INVALID_INPUT, but since the program aborted after (3), this macro will not be evaluated
+    return 0;
+}
+```
+
+> [!NOTE]
+> `debug.h` contains some more advance preprocessing and macro techniques which are used to implement the above macros. If you are curious or interested in more advanced C programming, you may be reading through this file.  
+
+## Utility Functions
+
+Defined in `utility.c` are functions that you will likely find to be useful in debugging your program or using in your program.
+
+```C
+size_t calculate_index_dblock_amount(size_t file_size);
+```
+- This function calculates the number of index D-blocks that will be necessary to store a file of size `file_size`
+
+```C
+size_t calculate_necessary_dblock_amount(size_t file_size);
+```
+- This function calculates the total number of D-blocks that are necessary to store a file of size `file_size`. This is the sum of the required index D-blocks and the required data D-blocks.
+
+```C
+dblock_index_t *cast_dblock_ptr(void *addr);
+```
+- This function safely casts from any pointer `addr` to a `dblock_index_t` pointer.
+- This function avoids any possible undefined behavior (e.g. pointer aliasing, pointer alignment, etc.) that may be caused from doing a pointer cast. 
+
+```C
+fs_retcode_t save_filesystem(FILE* file, filesystem_t *fs);
+```
+- This function saves a file system to a binary file for storage.
+
+```C
+fs_retcode_t load_filesystem(FILE* file, filesystem_t *fs);
+```
+- This function loads a file system from a binary file. 
+
+```C
+typedef enum fs_display_flag
+{
+    DISPLAY_FS_FORMAT = 0x1,
+    DISPLAY_INODES = 0x2,
+    DISPLAY_DBLOCKS = 0x4,
+    DISPLAY_ALL = 0x7
+} fs_display_flag_t;
+
+void display_filesystem(filesystem_t *fs, fs_display_flag_t flag);
+```
+- This function dumps to standard output the structure of the file system `fs`.
+- `flag` is a bit mask of the defined flags which controls what information about the file system is displayed:
+    1. `DISPLAY_FS_FORMAT`: displays rudimentary information about the format of the file system such as number of total inodes/dblocks and number of available inodes/dblocks 
+    2. `DISPLAY_INODES`: displays all the inodes which are currently being used in the file system. It will also show the indices of any D-blocks associated with each inode. 
+    3. `DISPLAY_DBLOCKS`: displays the contents of the D-blocks of any allocated D-block in the file system. The content is displayed in hexadecimal format. 
+    4. `DISPLAY_ALL`: displays all of the above.
+
+> [!WARNING]
+> In your submissions, make sure to not call `display_filesystem` in any of the graded functions you implement. Since the function outputs to stdout, then it can cause test cases to fail if the function is left in. If you do want to use it for debugging, make sure to comment it out! 
+
+## Terminal Program
+
+Along with your code, you are provided a `terminal.cpp` file (this is a course in C, so do not be concerned about the contents of the C++ file) which will be compiled into an executable called `terminal` in your build directory. The executable can be helpful in debugging.
+
+> [!WARNING]
+> The `terminal.cpp` program was written to aid in quickly developing test cases for this project. Therefore, the program itself may have bugs. So, you need to check if any bug that occurred is in `terminal.cpp` file or is in your own code. This program was provided because it may be an easier interface to use than calling the functions in your main function. We also hope this this program makes the project more interesting as you can see the terminal's functionality increase as you implement more functions
+
+This program is a rudimentary interpreter that mimics a very simple terminal that will call the functions you will write. The commands supported by the interoreter can be found by typing in `help` into the command line. 
+
+Often the control flow for debugging with `terminal` is:
+1. Load a file system from a binary file (via `load`) or generate a new file system (via `new`)
+2. Perform an operation
+3. Check the output to see if it is valid via the list command `ls` or the file system display command `fs`
+
+If you have a bug in the program, it may be helpful to save the state of the file system before the bug (via `save`) so that it can be loaded and the bug can be easily repeated. 
 
 ## Part 0+1 Structs
 
@@ -426,7 +594,7 @@ fs_retcode_t release_dblock(filesystem_t *fs, byte *dblock);
     - If `dblock` does not point to the beginning of a D-block, return `INVALID_INPUT`
     - If the D-block is successfully released, return `SUCCESS`
 
-## Part 1 Functions (inode_manip.c)
+## Part 1 Functions
 
 ```C
 fs_retcode_t inode_write_data(filesystem_t *fs, inode_t *inode, void *data, size_t n);
@@ -514,7 +682,7 @@ typedef struct fs_file *fs_file_t
 
 For part 2 and 3, there is the `REPORT_RETCODE` macro defined which accepts a `fs_retcode_t` value. It will output an error message corresponding to the return code to stdout. The functions will describe the retcode which should be passed into this macro and the conditions necessary.
 
-> [!INFORMATION]
+> [!NOTE]
 > The `REPORT_RETCODE` prints a string to standard out depending on the return code passed into it. Test cases often check this output meaning that if you use a function like `printf` in a function whose instruction does not say to output anything to standard out, you will likely fail the test case. It is recommended to replace these debugging `printf` with the macro `info` defined in `debug.h`
 
 ## Parts 2+3 Core Concepts
@@ -531,7 +699,7 @@ A path provides directions to a file in the file system.
     2. The base name (or basename) refers to the last name of a path. Depending on the context, the basename may refer to a file, a directory, or something that is not in the file system yet. 
         - In the example above, the basename is `file`
 
-## Part 2 Functions (file_operations.c)
+## Part 2 Functions
 
 ```C
 void new_terminal(filesystem_t *fs, terminal_context_t *term)
@@ -592,7 +760,7 @@ int fs_seek(fs_file_t file, seek_mode_t seek_mode, int offset)
 - If the seek mode is `FS_SEEK_CURRENT`, the `offset` is the offset from the current offset stored in `file`.
 - If the seek mode is `FS_SEEK_END`, the `offset` is the offset from the end of the file. 
 
-## Part 3 Functions (file_operations.c)
+## Part 3 Functions
 
 ```C
 int new_file(terminal_context_t *context, char *path, permission_t perms);
@@ -694,7 +862,7 @@ int list(terminal_context_t *context, char *path);
 - If the basename of the `path` is a directory, display each the directory entries on separate lines treating each child item (both files and directories) of the directory the same manner as the previous bullet point.
     - Even for directories, just display the value stored in the inode file size field as the file size of the directory.
 - The formatting of displaying a file is:
-    - The first character of the line should be `d` if the inode is a directory or `f` if it is a file. You can use `E` for any other file types (we have no tests for this, should we?)
+    - The first character of the line should be `d` if the inode is a directory or `f` if it is a file. You can use `E` for any other file types (we have no tests for this, so it is optional)
     - The second character of the line should be `r` if there is read permissions, `-` otherwise.
     - The third character of the line should be `w` if there is write permissions, `-` otherwise.
     - The fourth character of the line should be `x` if there is execute permissions, `-` otherwise. 
@@ -702,9 +870,9 @@ int list(terminal_context_t *context, char *path);
     - The next part should be the inode file size displayed as an unsigned long in base 10. 
     - The next character directly after the file size should be the tab character `\t`.
     - The next part should be the file name as stored in the directory entry (if the basename refer to a directory) or in the inode (if basename refer to a file). 
-    - If directory entry being displayed is a special directory entry, then display ` -> ` (ONE SPACE BETWEEN AND AFTER) immediately after the previous file name. After the array, display the name of the inode. 
+    - If directory entry being displayed is a special directory entry, then display ` -> ` (One space before and after) immediately after the previous file name. After the array, display the name of the inode. 
 ```
-SAMPLE OUTPUT
+SAMPLE OUTPUT (so you can see the formatting)
 d---    64      . -> a
 drwx    160     .. -> root
 d---    32      b
@@ -725,9 +893,7 @@ char *get_path_string(terminal_context_t *context);
 ```C
 int tree(terminal_context_t *context, char *path);
 ```
-- Displays a tree representation of the inode. 
-- Unlike list which displays only the contents of the current inode, tree displays the contents of the entire subtree begining at the current inode.
-  - If the inode is a file, display the name of the file. If the inode is a directory, display all files and directories including any in subdirectories.
+- Displays a tree representation of the inode. If the inode is a filename, display the name of the file. If the inode is a directory, display all files and directories including any in any subdirectories.
 - All files within a directory should be displayed in the order of their occurrence in the directory entries in the directory.
 - For each depth level from the root of the tree, there is THREE spaces that appears before the file name.
 ```txt
