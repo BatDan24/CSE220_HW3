@@ -427,7 +427,7 @@ fs_retcode_t release_dblock(filesystem_t *fs, byte *dblock);
     - If `dblock` does not point to the beginning of a D-block, return `INVALID_INPUT`
     - If the D-block is successfully released, return `SUCCESS`
 
-## Part 1 Functions
+## Part 1 Functions (inode_manip.c)
 
 ```C
 fs_retcode_t inode_write_data(filesystem_t *fs, inode_t *inode, void *data, size_t n);
@@ -532,7 +532,7 @@ A path provides directions to a file in the file system.
     2. The base name (or basename) refers to the last name of a path. Depending on the context, the basename may refer to a file, a directory, or something that is not in the file system yet. 
         - In the example above, the basename is `file`
 
-## Part 2 Functions
+## Part 2 Functions (file_operations.c)
 
 ```C
 void new_terminal(filesystem_t *fs, terminal_context_t *term)
@@ -593,7 +593,7 @@ int fs_seek(fs_file_t file, seek_mode_t seek_mode, int offset)
 - If the seek mode is `FS_SEEK_CURRENT`, the `offset` is the offset from the current offset stored in `file`.
 - If the seek mode is `FS_SEEK_END`, the `offset` is the offset from the end of the file. 
 
-## Part 3 Functions
+## Part 3 Functions (file_operations.c)
 
 ```C
 int new_file(terminal_context_t *context, char *path, permission_t perms);
