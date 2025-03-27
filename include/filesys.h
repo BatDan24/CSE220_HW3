@@ -90,6 +90,7 @@ typedef struct filesystem
 
 /*----------------------------------------------------*
  |  PART 0: INITIALIZATION & INODE/DBLOCK ALLOCATION  |
+ |  THIS PART IS OPTIONAL. THE CODE IS PROVIDED.      |
  |  functions you need to implement:                  |
  |      1. `new_filesystem`                           |
  |      2. `free_filesystem`                          |
@@ -99,10 +100,11 @@ typedef struct filesystem
  |      6. `claim_available_dblock`                   |
  |      7. `release_inode`                            |
  |      8. `release_dblock`                           |
- |  Relevant Sections in filesys.md:                  |
+ |  Relevant Sections in filesystem.md:               |
+ |      - Background and Design Details               |
+ |      - Part 0 and Part 1 Structs                   |
+ |      - Part 0 functions                            |
  *----------------------------------------------------*/
-
-// LOAD FILE SYSTEM / SAVE FILE SYSTEM
 
 /**
  * creates a new filesystem along with the root directory.
@@ -143,7 +145,7 @@ fs_retcode_t new_filesystem(filesystem_t *fs, size_t inode_total, size_t dblock_
 void free_filesystem(filesystem_t *fs);
 
 
-// EXTRACT METADATA ABOUT FILE SYSTEM
+// EXTRACT DATA ABOUT FILE SYSTEM
 
 /**
  * calculates the available number of inodes in a file system
@@ -241,7 +243,11 @@ fs_retcode_t release_dblock(filesystem_t *fs, byte *dblock);
  |      4. `inode_shrink_data`                 |
  |      5. `inode_release_data`                |
  |  Relevant Sections in filesys.md:           |
- |      - 
+ |      - I-Nodes                              |
+ |      - D-Blocks                             |
+ |      - I-Node and D-block: The Big Picture  |
+ |      - Part 0 and Part 1 Structs            |
+ |      - Part 1 Functions                     |
  *---------------------------------------------*/
  
 /**
@@ -346,18 +352,21 @@ struct fs_file
 
 typedef struct fs_file *fs_file_t;
 
-/*------------------------------------*
- |  PART 2: HIGH LEVEL FILE IO        |
- |  functions you need to implement:  |
- |      1. `new_terminal`             |
- |      2. `fs_open`                  |
- |      3. `fs_close`                 |
- |      4. `fs_read`                  |
- |      5. `fs_write`                 |
- |      6. `fs_seek`                  |
- |  Relevant Sections in filesys.md:  |
- |      -                             |
- *------------------------------------*/
+/*----------------------------------------------*
+ |  PART 2: HIGH LEVEL FILE IO                  |
+ |  functions you need to implement:            |
+ |      1. `new_terminal`                       |
+ |      2. `fs_open`                            |
+ |      3. `fs_close`                           |
+ |      4. `fs_read`                            |
+ |      5. `fs_write`                           |
+ |      6. `fs_seek`                            |
+ |  Relevant Sections in filesys.md:            |
+ |      - Part 1 Functions                      |
+ |      - Part 2 and Part 3 Structs and Macros  |
+ |      - Part 2 and Part 3 Core Concepts       |
+ |      - Part 2 Functions                      |
+ *----------------------------------------------*/
 
 /**
  * creates a new terminal starting at the root directory
@@ -437,7 +446,13 @@ int fs_seek(fs_file_t file, seek_mode_t seek_mode, int offset);
  |      8. `get_path_string`                    |
  |      9. `tree`                               |
  |  Relevant Sections in filesys.md:            |
- |                                              |
+ |      - File and Directory Representation     |
+ |      - File System Overview                  |
+ |      - Part 0 Functions                      |
+ |      - Part 1 Functions                      |
+ |      - Part 2 and Part 3 Structs and Macros  |
+ |      - Part 2 and Part 3 Core Concepts       |
+ |      - Part 3 Functions                      |
  *----------------------------------------------*/
 
 // HIGH LEVEL FILE SYSTEM OPERATIONS
@@ -529,6 +544,9 @@ int tree(terminal_context_t *context, char *path);
 /**
  * !! THE FOLLOWING FUNCTIONS ARE ALREADY IMPLEMENTED. 
  * !! Do not implement these functions yourself.
+ * !! THESE FUNCTIONS ARE IMPLEMENTED ALREADY IN src/utility.c
+ * 
+ * !! SEE "Utility Functions" section in the filesystem.md file to read more about using these functions
  */
 
  /**
