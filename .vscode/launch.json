@@ -5,40 +5,31 @@
             "type": "cppdbg",
             "request": "launch",
             "name": "Run Main",
-            "program": "${workspaceRoot}/build/hw2_main",
+            "program": "${workspaceRoot}/build/hw3_main",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build",
         },
         {
             "type": "cppdbg",
             "request": "launch",
-            "name": "Run Part1 Tests",
-            "program": "${workspaceRoot}/build/part1",
-            "args": ["0"],
+            "name": "Part 1 Tests",
+            "program": "${workspaceRoot}/build/part1_tests",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build"
         },
         {
             "type": "cppdbg",
             "request": "launch",
-            "name": "Run Part2 Tests",
-            "program": "${workspaceRoot}/build/part2",
+            "name": "Part 2 Tests",
+            "program": "${workspaceRoot}/build/part2_tests",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build"
         },
         {
             "type": "cppdbg",
             "request": "launch",
-            "name": "Run Part3 Tests",
-            "program": "${workspaceRoot}/build/part3",
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "Build"
-        },
-        {
-            "type": "cppdbg",
-            "request": "launch",
-            "name": "Run Part4 Tests",
-            "program": "${workspaceRoot}/build/part_4_tests",
+            "name": "Part 3 Tests",
+            "program": "${workspaceRoot}/build/part3_tests",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build"
         },

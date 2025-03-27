@@ -23,7 +23,7 @@ fs_retcode_t inode_write_data(filesystem_t *fs, inode_t *inode, void *data, size
     (void)inode;
     (void)n;
     (void)data;
-    return SUCCESS;
+    return NOT_IMPLEMENTED;
 
     //Check for valid input
 
@@ -42,7 +42,7 @@ fs_retcode_t inode_read_data(filesystem_t *fs, inode_t *inode, size_t offset, vo
     (void)buffer;
     (void)n;
     (void)bytes_read;
-    return SUCCESS;
+    return NOT_IMPLEMENTED;
     
     //check to make sure inputs are valid
 
@@ -56,7 +56,7 @@ fs_retcode_t inode_modify_data(filesystem_t *fs, inode_t *inode, size_t offset, 
     (void)offset;
     (void)buffer;
     (void)n;
-    return SUCCESS;
+    return NOT_IMPLEMENTED;
 
     //check to see if the input is valid
 
@@ -74,7 +74,7 @@ fs_retcode_t inode_shrink_data(filesystem_t *fs, inode_t *inode, size_t new_size
     (void)fs;
     (void)inode;
     (void)new_size;
-    return SUCCESS;
+    return NOT_IMPLEMENTED;
     
     //check to see if inputs are in valid range
 
@@ -92,6 +92,6 @@ fs_retcode_t inode_release_data(filesystem_t *fs, inode_t *inode)
 {
     (void)fs;
     (void)inode;
-    return SUCCESS;
+    return NOT_IMPLEMENTED;
     //shrink to size 0
 }
