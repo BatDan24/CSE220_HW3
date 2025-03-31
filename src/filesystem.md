@@ -298,7 +298,7 @@ has their own test cases.
 - The functions in this part can be implemented in any order. They only depend on functions written in part 0 and part 1 of the assignment.
 - Test cases will test the functions individually, so if you get stuck on implementing one function, you can attempt another!
 
-**Part 3**: This part of the assignment is required. This part involves implementing high level file system operations such as creating files and directories and more. This part requires the functions implemented in part 1 and part 2, and it can be immediately completed after those two parts. 
+**Part 3**: This part of the assignment is required. This part involves implementing high level file system operations such as creating files and directories and more. This part requires the functions implemented in part 1 and can be immediately completed after that part. 
 - The functions in this part can be implemented in any order. They only depend on functions written in part 0 and part 1 of the assignment.
 - Test cases will test the functions individually, so if you get stuck on implementing one function, you can attempt another!
 
